@@ -1,0 +1,69 @@
+<%- include("../partials/header", { title: title }) %>
+
+<div class="container my-5 d-flex justify-content-center">
+    <div class="card signup-card shadow-sm p-4">
+
+        <h4 class="text-center">Next Step</h4>
+        <p class="text-center text-muted small mb-4">Join Our Shoe Community</p>
+
+        <h5 class="mb-3">Create Account</h5>
+
+        <form action="/signup" method="POST">
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>First Name</label>
+                    <input type="text" class="form-control" name="firstName" placeholder="Enter first name" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Last Name</label>
+                    <input type="text" class="form-control" name="lastName" placeholder="Enter last name" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label>Email Address</label>
+                <input type="email" class="form-control" name="email" placeholder="Enter your email" required>
+            </div>
+
+            <div class="mb-3">
+                <label>Phone Number</label>
+                <input type="text" class="form-control" name="phone" placeholder="Enter your phone" required>
+            </div>
+
+            <div class="mb-3">
+                <label>Password</label>
+                <input type="password" class="form-control" name="password" placeholder="Create password" required>
+            </div>
+
+            <div class="mb-3">
+                <label>Confirm Password</label>
+                <input type="password" class="form-control" name="confirmPassword" placeholder="Confirm password" required>
+            </div>
+
+            <div class="mb-3">
+                <label>Referral Code (Optional)</label>
+                <input type="text" class="form-control" name="referralCode" placeholder="Enter referral code">
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" name="terms" required>
+                <label class="form-check-label small">
+                    I agree to Terms of Service and Privacy Policy
+                </label>
+            </div>
+
+            <button type="submit" class="btn btn-dark w-100">
+                Create Account
+            </button>
+
+            <p class="text-center mt-3 small">
+                Already have an account? <a href="/signin">Sign In</a>
+            </p>
+
+        </form>
+
+    </div>
+</div>
+
+<%- include("../partials/footer") %>

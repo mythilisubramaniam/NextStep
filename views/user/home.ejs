@@ -1,0 +1,84 @@
+<%- include("../partials/header", { title: title }) %>
+
+<style>
+.hero-section {
+    background:#e9ecef;
+    padding:40px;
+    border-radius:10px;
+}
+.hero-img {
+    border:1px solid #ccc;
+    border-radius:10px;
+}
+.category-card img,
+.product-card img {
+    height:180px;
+    object-fit:cover;
+}
+.product-card img {
+    height:200px;
+}
+</style>
+
+<div class="container my-4">
+
+    <!-- HERO SECTION -->
+    <div class="row align-items-center hero-section">
+        <div class="col-md-6">
+            <h3 class="fw-bold">Comfort, Done Right</h3>
+            <p class="text-muted">
+                Shoes crafted for comfort and style, designed to support every step
+                while reflecting elegance and performance.
+            </p>
+            <button class="btn btn-dark me-2">Shop Now</button>
+            <button class="btn btn-outline-dark">View Collection</button>
+        </div>
+
+        <div class="col-md-6 text-center">
+            <img src="/images/hero.jpg" class="img-fluid hero-img">
+        </div>
+    </div>
+
+    <!-- CATEGORY -->
+    <div class="mt-5">
+        <h5 class="fw-bold text-center mb-4">Shop by Category</h5>
+        <div class="row g-4">
+            <% data.categories.forEach(cat => { %>
+                <div class="col-md-4">
+                    <div class="card category-card shadow-sm">
+                        <img src="<%= cat.img %>" class="card-img-top">
+                        <div class="card-body text-center">
+                            <h6><%= cat.name %></h6>
+                            <button class="btn btn-dark btn-sm mt-2">Shop Now</button>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+
+    <!-- FEATURED PRODUCTS -->
+    <div class="mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold">Featured Products</h5>
+            <a href="#" class="small text-decoration-none">View All →</a>
+        </div>
+
+        <div class="row g-4">
+            <% data.products.forEach(prod => { %>
+                <div class="col-md-3">
+                    <div class="card product-card shadow-sm">
+                        <img src="<%= prod.img %>" class="card-img-top">
+                        <div class="card-body">
+                            <h6><%= prod.name %></h6>
+                            <p class="fw-bold">$<%= prod.price %></p>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+
+</div>
+
+<%- include("../partials/footer") %>
