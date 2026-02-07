@@ -41,3 +41,13 @@ exports.loadVerification = (req, res) => {
     res.render("user/verification", { data });
 };
 
+exports.loadAddress = (req, res) => {
+    const user = userService.getUser();
+    res.render("user/address", { user, title: "Address - Next Step" });
+};
+
+exports.addAddress = (req, res) => {
+    console.log("Address Data:", req.body);
+    res.send("Address added successfully");
+};
+

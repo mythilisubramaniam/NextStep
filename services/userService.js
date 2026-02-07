@@ -20,3 +20,11 @@ exports.getVerificationData = () => {
         expiry: "04:32"
     };
 };
+
+exports.getUser = () => {
+    return {
+        name: "John Doe",
+        email: "john@example.com",
+        phone: "+1234567890"
+    };
+};

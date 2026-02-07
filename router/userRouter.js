@@ -3,6 +3,8 @@ const router = express.Router();
 const userController = require("../controllers/userController");
 
 // Redirect root to signin
+router.get("/", userController.loadHome);
+
 router.get("/home", userController.loadHome);
 
 // Signin routes
@@ -24,5 +26,9 @@ router.get("/resetPassword", userController.loadResetPassword);
 // Verification route
 router.get("/verification", userController.loadVerification);
 
+// Address route
+router.get("/address", userController.loadAddress);
+
+router.post("/address", userController.addAddress);
 
 module.exports = router;

@@ -12,7 +12,10 @@ app.set("views", path.join(__dirname, "views"));
 
 
 const userRouter = require("./router/userRouter");
+const adminRouter = require("./router/adminRouter");
+
 app.use("/", userRouter);
+app.use("/admin", adminRouter);
 
 app.listen(3000, () => {
     console.log("Server running on http://localhost:3000");
