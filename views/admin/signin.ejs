@@ -9,20 +9,20 @@
     <!-- Card -->
     <div class="card shadow-sm p-4" style="width: 100%; max-width: 420px; border-radius: 8px;">
 
-        <h5 class="mb-3">Sign In</h5>
+        <h5 class="mb-3">Admin Sign In</h5>
 
-        <form>
+        <form action="/admin/login" method="POST">
 
             <!-- Email -->
             <div class="mb-3">
                 <label class="form-label small">Email Address</label>
-                <input type="email" class="form-control form-control-sm" placeholder="Enter your email">
+                <input type="email" name="email" class="form-control form-control-sm" placeholder="Enter your email" required>
             </div>
 
             <!-- Password -->
             <div class="mb-3 position-relative">
                 <label class="form-label small">Password</label>
-                <input type="password" class="form-control form-control-sm" placeholder="Enter your password">
+                <input type="password" name="password" class="form-control form-control-sm" placeholder="Enter your password" required>
                 <i class="bi bi-eye position-absolute" 
                    style="right: 10px; top: 38px; cursor: pointer;"></i>
             </div>
@@ -30,26 +30,15 @@
             <!-- Remember + Forgot -->
             <div class="d-flex justify-content-between align-items-center mb-3 small">
                 <div>
-                    <input type="checkbox"> Remember me
+                    <input type="checkbox" name="remember"> Remember me
                 </div>
-                <a href="/forgotPassword" class="text-decoration-none">Forgot password?</a>
+                <a href="#" class="text-decoration-none">Forgot password?</a>
             </div>
 
             <!-- Sign In Button -->
             <button type="submit" class="btn btn-dark w-100 btn-sm">
                 Sign In
             </button>
-
-            <!-- Google -->
-            <button type="button" class="btn btn-outline-secondary w-100 btn-sm mt-2">
-                Continue With Google
-            </button>
-
-            <!-- Signup -->
-            <p class="text-center small mt-3 mb-0">
-                Don't have an account?
-                <a href="/signup" class="text-decoration-none">Sign Up</a>
-            </p>
 
         </form>
 

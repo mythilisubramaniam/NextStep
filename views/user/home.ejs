@@ -1,10 +1,12 @@
 <%- include("../partials/header", { title: title }) %>
+<%- include("../partials/navbar") %>
 
 <style>
 .hero-section {
     background:#e9ecef;
     padding:40px;
     border-radius:10px;
+    margin-top: 20px;
 }
 .hero-img {
     border:1px solid #ccc;
@@ -25,17 +27,22 @@
     <!-- HERO SECTION -->
     <div class="row align-items-center hero-section">
         <div class="col-md-6">
-<h3 class="fw-bold">Comfort, Done Right</h3>
+            <h3 class="fw-bold">Comfort, Done Right</h3>
             <p class="text-muted">
                 Shoes crafted for comfort and style, designed to support every step
                 while reflecting elegance and performance.
             </p>
-            <button class="btn btn-dark me-2">Shop Now</button>
-            <button class="btn btn-outline-dark">View Collection</button>
+            <% if (user) { %>
+                <button class="btn btn-dark me-2">Shop Now</button>
+                <button class="btn btn-outline-dark">View Collection</button>
+            <% } else { %>
+                <a href="/signin" class="btn btn-dark me-2">Login to Shop</a>
+                <a href="/signup" class="btn btn-outline-dark">Sign Up</a>
+            <% } %>
         </div>
 
         <div class="col-md-6 text-center">
-            <img src="/images/hero.jpg" class="img-fluid hero-img">
+            <img src="/images/hero.jpg" class="img-fluid hero-img" alt="Hero Image">
         </div>
     </div>
 
@@ -43,10 +50,10 @@
     <div class="mt-5">
         <h5 class="fw-bold text-center mb-4">Shop by Category</h5>
         <div class="row g-4">
-            <% data.categories.forEach(cat => { %>
+            <% categories.forEach(cat => { %>
                 <div class="col-md-4">
                     <div class="card category-card shadow-sm">
-                        <img src="<%= cat.img %>" class="card-img-top">
+                        <img src="<%= cat.categoryImage %>" class="card-img-top" alt="<%= cat.name %>">
                         <div class="card-body text-center">
                             <h6><%= cat.name %></h6>
                             <button class="btn btn-dark btn-sm mt-2">Shop Now</button>
@@ -65,13 +72,13 @@
         </div>
 
         <div class="row g-4">
-            <% data.products.forEach(prod => { %>
+            <% featuredProducts.forEach(prod => { %>
                 <div class="col-md-3">
                     <div class="card product-card shadow-sm">
-                        <img src="<%= prod.img %>" class="card-img-top">
+                        <img src="<%= prod.image %>" class="card-img-top" alt="<%= prod.name %>">
                         <div class="card-body">
                             <h6><%= prod.name %></h6>
-                            <p class="fw-bold">$<%= prod.price %></p>
+                            <p class="fw-bold">₹<%= prod.price %></p>
                         </div>
                     </div>
                 </div>

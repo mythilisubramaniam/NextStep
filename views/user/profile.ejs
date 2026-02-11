@@ -1,0 +1,96 @@
+<%- include('../partials/header', { title: title }) %>
+<%- include('../partials/navbar') %>
+
+<div class="container my-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3 col-md-4 mb-4">
+            <%- include('../partials/sidebar') %>
+        </div>
+
+        <!-- Profile Content -->
+        <div class="col-lg-9 col-md-8">
+            <h3 class="mb-4 text-center">My Profile</h3>
+
+            <!-- Profile Information Card -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <!-- User Avatar & Name -->
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center me-3" 
+                             style="width: 80px; height: 80px; font-size: 32px;">
+                            <%= user.firstName.charAt(0).toUpperCase() %>
+                        </div>
+                        <div>
+                            <h5 class="mb-1"><%= user.firstName %> <%= user.lastName %></h5>
+                            <p class="text-muted mb-0"><%= user.email %></p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Edit Profile Form -->
+                    <h6 class="mb-3">Personal Information</h6>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">First Name</label>
+                            <p class="form-control-plaintext"><%= user.firstName %></p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Last Name</label>
+                            <p class="form-control-plaintext"><%= user.lastName %></p>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Email Address</label>
+                            <p class="form-control-plaintext"><%= user.email %></p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone Number</label>
+                            <p class="form-control-plaintext"><%= user.phone %></p>
+                        </div>
+                    </div>
+
+                    <a href="/profile/edit" class="btn btn-dark px-4">
+                        <i class="bi bi-pencil me-2"></i>Edit Profile
+                    </a>
+                </div>
+            </div>
+
+            <!-- Change Password Section -->
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h6 class="mb-3">Change Password</h6>
+                    <form action="/profile/change-password" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Current Password</label>
+                            <input type="password" class="form-control" 
+                                   name="currentPassword" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">New Password</label>
+                            <input type="password" class="form-control" 
+                                   name="newPassword" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" 
+                                   name="confirmPassword" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-dark px-4">
+                            <i class="bi bi-key me-2"></i>Update Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('../partials/footer') %>

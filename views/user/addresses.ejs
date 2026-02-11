@@ -1,0 +1,609 @@
+<%- include('../partials/header', { title: 'My Addresses - Next Step' }) %>
+<%- include('../partials/navbar') %>
+
+<style>
+    .form-control.is-valid {
+        border-color: #28a745;
+    }
+
+    .form-control.is-invalid {
+        border-color: #dc3545;
+    }
+
+    .invalid-feedback {
+        display: block;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #dc3545;
+    }
+
+    .form-text {
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #6c757d;
+    }
+
+    .text-danger {
+        color: #dc3545 !important;
+    }
+</style>
+
+<div class="container my-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3 col-md-4 mb-4">
+            <%- include('../partials/sidebar') %>
+        </div>
+
+        <!-- Address Content -->
+        <div class="col-lg-9 col-md-8">
+            <div class="card shadow-sm border-0 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">My Addresses</h4>
+                </div>
+
+                <button class="btn btn-dark mb-3" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                    <i class="bi bi-plus-circle me-2"></i>Add New Address
+                </button>
+
+                <% if (typeof addresses !== 'undefined' && addresses.length === 0) { %>
+                <p class="text-muted">No addresses found. Add your first address!</p>
+                <% } else if (typeof addresses !== 'undefined') { %>
+                
+                <div class="row">
+                    <% addresses.forEach(function(address) { %>
+                    <div class="col-md-6 mb-4">
+                        <div class="card p-3 <%= address.isDefault ? 'border-primary' : '' %>">
+                            <h5>
+                                <%= address.name %> 
+                                <span class="badge bg-secondary"><%= address.type %></span>
+                                <% if (address.isDefault) { %>
+                                <span class="badge bg-primary">Default</span>
+                                <% } %>
+                            </h5>
+                            <% if (address.label) { %>
+                            <div class="text-muted"><%= address.label %></div>
+                            <% } %>
+                            <div><%= address.house_number %>, <%= address.locality %></div>
+                            <div><%= address.city %>, <%= address.state %> - <%= address.pincode %></div>
+                            <div>Phone: <%= address.phone_number %></div>
+                            
+                            <div class="mt-2 d-flex gap-2">
+                                <button type="button" class="btn btn-outline-dark btn-sm edit-address-btn" 
+                                        data-bs-toggle="modal" data-bs-target="#editAddressModal" 
+                                        data-address='<%- JSON.stringify(address) %>'>
+                                    Edit
+                                </button>
+                                
+                                <% if (!address.isDefault) { %>
+                                <button type="button" class="btn btn-outline-primary btn-sm" 
+                                        onclick="setDefaultAddress('<%= address._id %>')">
+                                    Set as Default
+                                </button>
+                                <% } %>
+                                
+                                <button type="button" class="btn btn-outline-danger btn-sm" 
+                                        onclick="deleteAddress('<%= address._id %>')">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <% }) %>
+                </div>
+                
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Address Modal -->
+<div class="modal fade" id="addAddressModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Address</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addAddressForm">
+                    <div class="mb-3">
+                        <label class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="name" id="addName" required maxlength="50">
+                        <div class="invalid-feedback" id="addNameError"></div>
+                        <small class="form-text">2-50 characters, letters and spaces only</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Label</label>
+                        <input type="text" class="form-control" name="label" id="addLabel" maxlength="50">
+                        <small class="form-text">Optional (e.g., "My Home", "Office")</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Type</label>
+                        <select class="form-select" name="type" id="addType">
+                            <option value="HOME">Home</option>
+                            <option value="WORK">Work</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">House Number <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="house_number" id="addHouseNumber" required maxlength="100">
+                        <div class="invalid-feedback" id="addHouseNumberError"></div>
+                        <small class="form-text">House/Flat number, building name</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Locality <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="locality" id="addLocality" required maxlength="100">
+                        <div class="invalid-feedback" id="addLocalityError"></div>
+                        <small class="form-text">Area, street, sector, village</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">City <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="city" id="addCity" required maxlength="50">
+                        <div class="invalid-feedback" id="addCityError"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">State <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="state" id="addState" required maxlength="50">
+                        <div class="invalid-feedback" id="addStateError"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Pincode <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="pincode" id="addPincode" required maxlength="6">
+                        <div class="invalid-feedback" id="addPincodeError"></div>
+                        <small class="form-text">6-digit postal code</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" name="phone_number" id="addPhoneNumber" required maxlength="10">
+                        <div class="invalid-feedback" id="addPhoneNumberError"></div>
+                        <small class="form-text">10-digit mobile number</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-dark" id="addAddressBtn">Add Address</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Address Modal -->
+<div class="modal fade" id="editAddressModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Address</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editAddressForm">
+                    <input type="hidden" name="_id" id="editAddressId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="name" id="editName" required maxlength="50">
+                        <div class="invalid-feedback" id="editNameError"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Label</label>
+                        <input type="text" class="form-control" name="label" id="editLabel" maxlength="50">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Type</label>
+                        <select class="form-select" name="type" id="editType">
+                            <option value="HOME">Home</option>
+                            <option value="WORK">Work</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">House Number <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="house_number" id="editHouseNumber" required maxlength="100">
+                        <div class="invalid-feedback" id="editHouseNumberError"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Locality <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="locality" id="editLocality" required maxlength="100">
+                        <div class="invalid-feedback" id="editLocalityError"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">City <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="city" id="editCity" required maxlength="50">
+                        <div class="invalid-feedback" id="editCityError"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">State <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="state" id="editState" required maxlength="50">
+                        <div class="invalid-feedback" id="editStateError"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Pincode <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="pincode" id="editPincode" required maxlength="6">
+                        <div class="invalid-feedback" id="editPincodeError"></div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" name="phone_number" id="editPhoneNumber" required maxlength="10">
+                        <div class="invalid-feedback" id="editPhoneNumberError"></div>
+                    </div>
+
+                    <button type="submit" class="btn btn-dark" id="editAddressBtn">Save Changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Validation functions
+function validateName(name) {
+    const nameRegex = /^[a-zA-Z\s]{2,50}$/;
+    if (!name.trim()) return 'Name is required.';
+    if (!nameRegex.test(name.trim())) return 'Name must be 2-50 characters long and contain only letters and spaces.';
+    return '';
+}
+
+function validatePhoneNumber(phone) {
+    const phoneRegex = /^[6-9][0-9]{9}$/;
+    if (!phone.trim()) return 'Phone number is required.';
+    if (!phoneRegex.test(phone.trim())) return 'Please enter a valid 10-digit mobile number starting with 6-9.';
+    return '';
+}
+
+function validatePincode(pincode) {
+    const pincodeRegex = /^[0-9]{6}$/;
+    if (!pincode.toString().trim()) return 'Pincode is required.';
+    if (!pincodeRegex.test(pincode.toString().trim())) return 'Please enter a valid 6-digit pincode.';
+    return '';
+}
+
+function validateLocation(location, fieldName) {
+    const locationRegex = /^[a-zA-Z\s\-\.]{2,50}$/;
+    if (!location.trim()) return `${fieldName} is required.`;
+    if (!locationRegex.test(location.trim())) return `${fieldName} must be 2-50 characters and contain only letters, spaces, hyphens, and dots.`;
+    return '';
+}
+
+function validateAddress(address, fieldName) {
+    const addressRegex = /^[a-zA-Z0-9\s\-\.\,\/\#]{1,100}$/;
+    if (!address.trim()) return `${fieldName} is required.`;
+    if (!addressRegex.test(address.trim())) return `${fieldName} contains invalid characters.`;
+    return '';
+}
+
+function showFieldError(fieldId, errorId, message) {
+    const field = document.getElementById(fieldId);
+    const errorDiv = document.getElementById(errorId);
+    
+    if (message) {
+        field.classList.add('is-invalid');
+        field.classList.remove('is-valid');
+        errorDiv.textContent = message;
+    } else {
+        field.classList.remove('is-invalid');
+        field.classList.add('is-valid');
+        errorDiv.textContent = '';
+    }
+}
+
+function validateAddForm(prefix) {
+    let isValid = true;
+
+    const name = document.getElementById(prefix + 'Name').value;
+    const nameError = validateName(name);
+    showFieldError(prefix + 'Name', prefix + 'NameError', nameError);
+    if (nameError) isValid = false;
+
+    const houseNumber = document.getElementById(prefix + 'HouseNumber').value;
+    const houseNumberError = validateAddress(houseNumber, 'House number');
+    showFieldError(prefix + 'HouseNumber', prefix + 'HouseNumberError', houseNumberError);
+    if (houseNumberError) isValid = false;
+
+    const locality = document.getElementById(prefix + 'Locality').value;
+    const localityError = validateAddress(locality, 'Locality');
+    showFieldError(prefix + 'Locality', prefix + 'LocalityError', localityError);
+    if (localityError) isValid = false;
+
+    const city = document.getElementById(prefix + 'City').value;
+    const cityError = validateLocation(city, 'City');
+    showFieldError(prefix + 'City', prefix + 'CityError', cityError);
+    if (cityError) isValid = false;
+
+    const state = document.getElementById(prefix + 'State').value;
+    const stateError = validateLocation(state, 'State');
+    showFieldError(prefix + 'State', prefix + 'StateError', stateError);
+    if (stateError) isValid = false;
+
+    const pincode = document.getElementById(prefix + 'Pincode').value;
+    const pincodeError = validatePincode(pincode);
+    showFieldError(prefix + 'Pincode', prefix + 'PincodeError', pincodeError);
+    if (pincodeError) isValid = false;
+
+    const phoneNumber = document.getElementById(prefix + 'PhoneNumber').value;
+    const phoneError = validatePhoneNumber(phoneNumber);
+    showFieldError(prefix + 'PhoneNumber', prefix + 'PhoneNumberError', phoneError);
+    if (phoneError) isValid = false;
+
+    return isValid;
+}
+
+// Real-time validation
+['Name', 'HouseNumber', 'Locality', 'City', 'State', 'Pincode', 'PhoneNumber'].forEach(field => {
+    const addField = document.getElementById('add' + field);
+    const editField = document.getElementById('edit' + field);
+    
+    if (addField) {
+        addField.addEventListener('blur', () => validateAddForm('add'));
+        addField.addEventListener('input', () => {
+            addField.classList.remove('is-invalid', 'is-valid');
+            document.getElementById('add' + field + 'Error').textContent = '';
+        });
+    }
+    
+    if (editField) {
+        editField.addEventListener('blur', () => validateAddForm('edit'));
+        editField.addEventListener('input', () => {
+            editField.classList.remove('is-invalid', 'is-valid');
+            document.getElementById('edit' + field + 'Error').textContent = '';
+        });
+    }
+});
+
+// Add address form submission
+document.getElementById('addAddressForm').onsubmit = function(e) {
+    e.preventDefault();
+    
+    if (!validateAddForm('add')) {
+        return;
+    }
+    
+    const form = e.target;
+    const data = {};
+    for (const el of form.elements) {
+        if (el.name) data[el.name] = el.value.trim();
+    }
+    
+    const submitBtn = document.getElementById('addAddressBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Adding...';
+    
+    fetch('/address/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            Swal.fire({
+                title: 'Success!',
+                text: 'Address added successfully',
+                icon: 'success',
+                confirmButtonColor: '#28a745'
+            }).then(() => {
+                location.reload();
+            });
+        } else {
+            Swal.fire({
+                title: 'Error',
+                text: result.message || 'Failed to add address.',
+                icon: 'error',
+                confirmButtonColor: '#dc3545'
+            });
+        }
+    })
+    .catch(err => {
+        console.error('Error adding address:', err);
+        Swal.fire({
+            title: 'Error',
+            text: 'Failed to add address. Please try again.',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+        });
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add Address';
+    });
+};
+
+// Edit address modal population
+document.querySelectorAll('.edit-address-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        const address = JSON.parse(this.getAttribute('data-address'));
+        
+        document.getElementById('editAddressId').value = address._id;
+        document.getElementById('editName').value = address.name || '';
+        document.getElementById('editLabel').value = address.label || '';
+        document.getElementById('editType').value = address.type || 'HOME';
+        document.getElementById('editHouseNumber').value = address.house_number || '';
+        document.getElementById('editLocality').value = address.locality || '';
+        document.getElementById('editCity').value = address.city || '';
+        document.getElementById('editState').value = address.state || '';
+        document.getElementById('editPincode').value = address.pincode || '';
+        document.getElementById('editPhoneNumber').value = address.phone_number || '';
+        
+        // Clear validation states
+        ['Name', 'HouseNumber', 'Locality', 'City', 'State', 'Pincode', 'PhoneNumber'].forEach(field => {
+            const fieldElement = document.getElementById('edit' + field);
+            const errorElement = document.getElementById('edit' + field + 'Error');
+            fieldElement.classList.remove('is-invalid', 'is-valid');
+            errorElement.textContent = '';
+        });
+    });
+});
+
+// Edit address form submission
+document.getElementById('editAddressForm').onsubmit = function(e) {
+    e.preventDefault();
+    
+    if (!validateAddForm('edit')) {
+        return;
+    }
+    
+    const form = e.target;
+    const id = document.getElementById('editAddressId').value;
+    const data = {};
+    for (const el of form.elements) {
+        if (el.name && el.name !== '_id') data[el.name] = el.value.trim();
+    }
+    
+    const submitBtn = document.getElementById('editAddressBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+    
+    fetch('/address/edit/' + id, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            Swal.fire({
+                title: 'Success!',
+                text: 'Address updated successfully',
+                icon: 'success',
+                confirmButtonColor: '#28a745'
+            }).then(() => {
+                location.reload();
+            });
+        } else {
+            Swal.fire({
+                title: 'Error',
+                text: result.message || 'Failed to update address.',
+                icon: 'error',
+                confirmButtonColor: '#dc3545'
+            });
+        }
+    })
+    .catch(err => {
+        console.error('Error updating address:', err);
+        Swal.fire({
+            title: 'Error',
+            text: 'Failed to update address. Please try again.',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+        });
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save Changes';
+    });
+};
+
+// Set default address
+async function setDefaultAddress(addressId) {
+    try {
+        const response = await fetch(`/address/set-default/${addressId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            await Swal.fire({
+                title: 'Success!',
+                text: 'Default address updated',
+                icon: 'success',
+                confirmButtonColor: '#28a745',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            window.location.reload();
+        } else {
+            await Swal.fire({
+                title: 'Error',
+                text: data.message || 'Failed to set default address',
+                icon: 'error',
+                confirmButtonColor: '#dc3545'
+            });
+        }
+    } catch (error) {
+        console.error('Error setting default address:', error);
+        await Swal.fire({
+            title: 'Error',
+            text: 'Failed to set default address. Please try again.',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+        });
+    }
+}
+
+// Delete address
+async function deleteAddress(addressId) {
+    const result = await Swal.fire({
+        title: 'Delete Address',
+        text: 'Are you sure you want to delete this address? This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it',
+        cancelButtonText: 'Cancel',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        reverseButtons: true
+    });
+    
+    if (!result.isConfirmed) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/address/delete/${addressId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            await Swal.fire({
+                title: 'Deleted!',
+                text: 'Address has been deleted successfully.',
+                icon: 'success',
+                confirmButtonColor: '#28a745',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            window.location.reload();
+        } else {
+            await Swal.fire({
+                title: 'Error',
+                text: data.message || 'Failed to delete address',
+                icon: 'error',
+                confirmButtonColor: '#dc3545'
+            });
+        }
+    } catch (error) {
+        console.error('Error deleting address:', error);
+        await Swal.fire({
+            title: 'Error',
+            text: 'Failed to delete address. Please try again.',
+            icon: 'error',
+            confirmButtonColor: '#dc3545'
+        });
+    }
+}
+</script>
+
+<%- include('../partials/footer') %>

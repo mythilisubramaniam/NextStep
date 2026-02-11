@@ -1,0 +1,178 @@
+<%- include('../partials/header', { title: 'Verify OTP - Next Step' }) %>
+
+<style>
+.verify-box {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: 100px auto;
+}
+.otp-box {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.otp-input {
+    width: 45px;
+    height: 45px;
+    font-size: 20px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+.otp-input:focus {
+    border-color: black;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+</style>
+
+<div class="container">
+    <div class="verify-box p-4">
+        <div class="text-center mb-3">
+            <i class="fas fa-mobile-alt fa-2x mb-2"></i>
+            <h5>Enter Verification Code</h5>
+            <p class="text-muted">We've sent a 6-digit code to <%= email %></p>
+        </div>
+
+        <% if (error) { %>
+        <div class="alert alert-danger text-center">
+            <%= error %>
+        </div>
+        <% } %>
+
+        <form method="post" action="/verifyOtp" onsubmit="return collectOTP()">
+            <div class="otp-box">
+                <input type="text" class="otp-input" maxlength="1" />
+                <input type="text" class="otp-input" maxlength="1" />
+                <input type="text" class="otp-input" maxlength="1" />
+                <input type="text" class="otp-input" maxlength="1" />
+                <input type="text" class="otp-input" maxlength="1" />
+                <input type="text" class="otp-input" maxlength="1" />
+            </div>
+
+            <input type="hidden" name="otp" id="otp-full" />
+            <input type="hidden" name="email" value="<%= email %>" />
+            <input type="hidden" name="flow" value="<%= flow || 'forgot-password' %>" />
+
+            <button class="btn btn-dark w-100" type="submit">Verify Code</button>
+
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    <i class="fas fa-clock me-1"></i>Code expires in <span id="timer">10:00</span>
+                </small>
+                <p class="small mt-2">
+                    Didn't receive the code?
+                    <a href="#" id="resendOtpLink">Resend OTP</a>
+                </p>
+            </div>
+
+            <hr />
+            <div class="text-start">
+                <a href="/signin" class="text-decoration-none small">
+                    <i class="fas fa-arrow-left me-1"></i> Back to login
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+const inputs = document.querySelectorAll(".otp-input");
+inputs.forEach((input, index) => {
+    input.addEventListener("input", (e) => {
+        const value = e.target.value.replace(/[^0-9]/g, '');
+        e.target.value = value;
+        if (value.length === 1 && index < inputs.length - 1) {
+            inputs[index + 1].focus();
+        }
+    });
+    
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Backspace" && !e.target.value && index > 0) {
+            inputs[index - 1].focus();
+        }
+    });
+});
+
+function collectOTP() {
+    const inputs = document.querySelectorAll('.otp-input');
+    let otp = '';
+    inputs.forEach(input => { otp += input.value; });
+    document.getElementById('otp-full').value = otp;
+    
+    if (otp.length !== 6) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Incomplete OTP',
+            text: 'Please enter all 6 digits',
+            confirmButtonColor: '#212529'
+        });
+        return false;
+    }
+    return true;
+}
+
+// Timer
+let timerSeconds = 600; // 10 minutes
+const timerSpan = document.getElementById('timer');
+const timerInterval = setInterval(() => {
+    timerSeconds--;
+    let min = Math.floor(timerSeconds / 60);
+    let sec = timerSeconds % 60;
+    timerSpan.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
+    
+    if (timerSeconds <= 0) {
+        clearInterval(timerInterval);
+        Swal.fire({
+            icon: 'error',
+            title: 'OTP Expired',
+            text: 'Please request a new OTP',
+            confirmButtonColor: '#212529'
+        });
+    }
+}, 1000);
+
+// Resend OTP
+document.getElementById('resendOtpLink').addEventListener('click', function(e) {
+    e.preventDefault();
+    const email = document.querySelector('input[name="email"]').value;
+    
+    fetch('/resendOtp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+    }).then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'OTP Sent!',
+                text: 'A new code has been sent to your email',
+                confirmButtonColor: '#212529'
+            });
+            timerSeconds = 600;
+            // Clear existing OTP inputs
+            inputs.forEach(input => input.value = '');
+            inputs[0].focus();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed',
+                text: data.message || 'Failed to resend OTP',
+                confirmButtonColor: '#212529'
+            });
+        }
+    }).catch(error => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Something went wrong. Please try again.',
+            confirmButtonColor: '#212529'
+        });
+    });
+});
+</script>
+
+<%- include('../partials/footer') %>

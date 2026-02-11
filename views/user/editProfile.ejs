@@ -1,0 +1,256 @@
+<%- include('../partials/header', { title: 'Edit Profile - Next Step' }) %>
+<%- include('../partials/navbar') %>
+
+<style>
+    .edit-profile-card {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+        max-width: 500px;
+        width: 100%;
+        margin: 20px auto;
+    }
+
+    .form-control:focus {
+        border-color: #000;
+        box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+    }
+
+    .btn-dark {
+        background-color: #000;
+        border-color: #000;
+    }
+
+    .btn-dark:hover {
+        background-color: #333;
+        border-color: #333;
+    }
+
+    .form-control.is-invalid {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    .form-control.is-valid {
+        border-color: #28a745;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    }
+
+    .invalid-feedback {
+        display: none;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #dc3545;
+    }
+
+    .form-text {
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #6c757d;
+    }
+
+    .text-danger {
+        color: #dc3545 !important;
+    }
+</style>
+
+<div class="container my-5 d-flex justify-content-center">
+    <div class="edit-profile-card p-4">
+        <h4 class="mb-3">Edit Profile</h4>
+
+        <form id="editProfileForm" method="POST" action="/profile/edit">
+            <div class="mb-3">
+                <label for="firstName" class="form-label">
+                    First Name <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control" id="firstName" 
+                       name="firstName" value="<%= user.firstName %>" required>
+                <div class="invalid-feedback" id="firstNameError"></div>
+                <div class="form-text">2-50 characters, letters only</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="lastName" class="form-label">
+                    Last Name <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control" id="lastName" 
+                       name="lastName" value="<%= user.lastName %>" required>
+                <div class="invalid-feedback" id="lastNameError"></div>
+                <div class="form-text">1-50 characters, letters only</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="phone" class="form-label">
+                    Phone Number <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control" id="phone" 
+                       name="phone" value="<%= user.phone %>" required maxlength="10">
+                <div class="invalid-feedback" id="phoneError"></div>
+                <div class="form-text">10-digit mobile number (starts with 6-9)</div>
+            </div>
+
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" 
+                       value="<%= user.email %>" disabled>
+                <div class="form-text">Email cannot be changed</div>
+            </div>
+
+            <button type="submit" class="btn btn-dark w-100">Save Changes</button>
+            <a href="/profile" class="btn btn-link w-100 mt-2">Cancel</a>
+        </form>
+    </div>
+</div>
+
+<script>
+// Validation functions
+function validateFirstName(firstName) {
+    const errors = [];
+    const trimmed = firstName.trim();
+    
+    if (!trimmed) {
+        errors.push('First name is required');
+    } else if (trimmed.length < 2) {
+        errors.push('First name must be at least 2 characters long');
+    } else if (trimmed.length > 50) {
+        errors.push('First name cannot exceed 50 characters');
+    } else if (!/^[a-zA-Z\s'-]+$/.test(trimmed)) {
+        errors.push('First name can only contain letters, spaces, hyphens, and apostrophes');
+    }
+    
+    return errors;
+}
+
+function validateLastName(lastName) {
+    const errors = [];
+    const trimmed = lastName.trim();
+    
+    if (!trimmed) {
+        errors.push('Last name is required');
+    } else if (trimmed.length > 50) {
+        errors.push('Last name cannot exceed 50 characters');
+    } else if (!/^[a-zA-Z\s'-]+$/.test(trimmed)) {
+        errors.push('Last name can only contain letters, spaces, hyphens, and apostrophes');
+    }
+    
+    return errors;
+}
+
+function validatePhone(phone) {
+    const errors = [];
+    const trimmed = phone.trim();
+    const cleanPhone = trimmed.replace(/\D/g, '');
+    
+    if (!trimmed) {
+        errors.push('Phone number is required');
+    } else if (cleanPhone.length !== 10) {
+        errors.push('Phone number must be exactly 10 digits');
+    } else if (!/^[6-9]/.test(cleanPhone)) {
+        errors.push('Phone number must start with 6, 7, 8, or 9');
+    } else if (!/^[6-9][0-9]{9}$/.test(cleanPhone)) {
+        errors.push('Please enter a valid mobile number');
+    }
+    
+    return errors;
+}
+
+function showFieldError(fieldId, errors) {
+    const field = document.getElementById(fieldId);
+    const errorDiv = document.getElementById(fieldId + 'Error');
+    
+    if (errors.length > 0) {
+        field.classList.add('is-invalid');
+        field.classList.remove('is-valid');
+        errorDiv.textContent = errors[0];
+        errorDiv.style.display = 'block';
+    } else {
+        field.classList.remove('is-invalid');
+        field.classList.add('is-valid');
+        errorDiv.textContent = '';
+        errorDiv.style.display = 'none';
+    }
+}
+
+function clearFieldError(fieldId) {
+    const field = document.getElementById(fieldId);
+    const errorDiv = document.getElementById(fieldId + 'Error');
+    field.classList.remove('is-invalid', 'is-valid');
+    errorDiv.textContent = '';
+    errorDiv.style.display = 'none';
+}
+
+// Real-time validation
+document.getElementById('firstName').addEventListener('input', function() {
+    const errors = validateFirstName(this.value);
+    showFieldError('firstName', errors);
+});
+
+document.getElementById('firstName').addEventListener('blur', function() {
+    const errors = validateFirstName(this.value);
+    showFieldError('firstName', errors);
+});
+
+document.getElementById('lastName').addEventListener('input', function() {
+    const errors = validateLastName(this.value);
+    showFieldError('lastName', errors);
+});
+
+document.getElementById('lastName').addEventListener('blur', function() {
+    const errors = validateLastName(this.value);
+    showFieldError('lastName', errors);
+});
+
+document.getElementById('phone').addEventListener('input', function() {
+    // Allow only digits and limit to 10 characters
+    this.value = this.value.replace(/\D/g, '').substring(0, 10);
+    const errors = validatePhone(this.value);
+    showFieldError('phone', errors);
+});
+
+document.getElementById('phone').addEventListener('blur', function() {
+    const errors = validatePhone(this.value);
+    showFieldError('phone', errors);
+});
+
+// Handle form submission
+document.getElementById('editProfileForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const firstName = document.getElementById('firstName').value;
+    const lastName = document.getElementById('lastName').value;
+    const phone = document.getElementById('phone').value;
+    
+    // Validate all fields
+    const firstNameErrors = validateFirstName(firstName);
+    const lastNameErrors = validateLastName(lastName);
+    const phoneErrors = validatePhone(phone);
+    
+    // Show validation errors
+    showFieldError('firstName', firstNameErrors);
+    showFieldError('lastName', lastNameErrors);
+    showFieldError('phone', phoneErrors);
+    
+    // Check if there are any errors
+    if (firstNameErrors.length > 0 || lastNameErrors.length > 0 || phoneErrors.length > 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            text: 'Please fix the errors in the form before submitting.',
+            confirmButtonColor: '#212529'
+        });
+        return;
+    }
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+    
+    // Submit the form
+    this.submit();
+});
+</script>
+
+<%- include('../partials/footer') %>
