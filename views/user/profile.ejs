@@ -1,6 +1,11 @@
 <%- include('../partials/header', { title: title }) %>
 <%- include('../partials/navbar') %>
 
+<!-- Cropper.js CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <div class="container my-5">
     <div class="row">
         <!-- Sidebar -->
@@ -10,87 +15,509 @@
 
         <!-- Profile Content -->
         <div class="col-lg-9 col-md-8">
-            <h3 class="mb-4 text-center">My Profile</h3>
+            <h3 class="mb-4">My Profile</h3>
+
+            <!-- Profile Image Card -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-4">Profile Picture</h5>
+                    <div class="d-flex align-items-center">
+                        <div class="position-relative me-4">
+                            <% if (user.profileImage && user.profileImage !== '/images/default-profile.png') { %>
+                                <img src="<%= user.profileImage %>" alt="Profile" class="rounded-circle" 
+                                     style="width: 100px; height: 100px; object-fit: cover;" id="profileImagePreview">
+                            <% } else { %>
+                                <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center" 
+                                     style="width: 100px; height: 100px; font-size: 40px;" id="profileImagePreview">
+                                    <%= user.firstName.charAt(0).toUpperCase() %>
+                                </div>
+                            <% } %>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-dark btn-sm" onclick="document.getElementById('profileImageInput').click()">
+                                <i class="bi bi-camera me-2"></i>Change Picture
+                            </button>
+                            <input type="file" id="profileImageInput" accept="image/*" style="display: none;">
+                            <p class="text-muted small mt-2 mb-0">JPG, PNG or GIF. Max size 5MB</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Profile Information Card -->
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body p-4">
-                    <!-- User Avatar & Name -->
-                    <div class="d-flex align-items-center mb-4">
-                        <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center me-3" 
-                             style="width: 80px; height: 80px; font-size: 32px;">
-                            <%= user.firstName.charAt(0).toUpperCase() %>
-                        </div>
-                        <div>
-                            <h5 class="mb-1"><%= user.firstName %> <%= user.lastName %></h5>
-                            <p class="text-muted mb-0"><%= user.email %></p>
-                        </div>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="card-title mb-0">Personal Information</h5>
+                        <a href="/profile/edit" class="btn btn-dark btn-sm">
+                            <i class="bi bi-pencil me-2"></i>Edit Profile
+                        </a>
                     </div>
-
-                    <hr>
-
-                    <!-- Edit Profile Form -->
-                    <h6 class="mb-3">Personal Information</h6>
                     
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">First Name</label>
-                            <p class="form-control-plaintext"><%= user.firstName %></p>
+                            <label class="form-label text-muted small">First Name</label>
+                            <p class="mb-0"><%= user.firstName %></p>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Last Name</label>
-                            <p class="form-control-plaintext"><%= user.lastName %></p>
+                            <label class="form-label text-muted small">Last Name</label>
+                            <p class="mb-0"><%= user.lastName %></p>
                         </div>
                     </div>
 
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Email Address</label>
-                            <p class="form-control-plaintext"><%= user.email %></p>
+                            <label class="form-label text-muted small">Email Address</label>
+                            <p class="mb-0"><%= user.email %></p>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Phone Number</label>
-                            <p class="form-control-plaintext"><%= user.phone %></p>
+                            <label class="form-label text-muted small">Phone Number</label>
+                            <p class="mb-0"><%= user.phone || 'Not provided' %></p>
                         </div>
                     </div>
 
-                    <a href="/profile/edit" class="btn btn-dark px-4">
-                        <i class="bi bi-pencil me-2"></i>Edit Profile
-                    </a>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Member Since</label>
+                            <p class="mb-0"><%= new Date(user.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Change Password Section -->
-            <div class="card shadow-sm border-0">
+            <!-- Default Address Card -->
+            <% if (defaultAddress) { %>
+            <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body p-4">
-                    <h6 class="mb-3">Change Password</h6>
-                    <form action="/profile/change-password" method="POST">
-                        <div class="mb-3">
-                            <label class="form-label">Current Password</label>
-                            <input type="password" class="form-control" 
-                                   name="currentPassword" required>
-                        </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">Default Shipping Address</h5>
+                        <a href="/addresses" class="btn btn-outline-dark btn-sm">
+                            <i class="bi bi-geo-alt me-2"></i>Manage Addresses
+                        </a>
+                    </div>
+                    <div class="border-start border-3 border-dark ps-3">
+                        <p class="mb-1"><strong><%= defaultAddress.name %></strong></p>
+                        <p class="mb-1"><%= defaultAddress.houseNumber %>, <%= defaultAddress.locality %></p>
+                        <% if (defaultAddress.landmark) { %>
+                            <p class="mb-1">Landmark: <%= defaultAddress.landmark %></p>
+                        <% } %>
+                        <p class="mb-1"><%= defaultAddress.city %>, <%= defaultAddress.state %> - <%= defaultAddress.pincode %></p>
+                        <p class="mb-0">Phone: <%= defaultAddress.phone %></p>
+                    </div>
+                </div>
+            </div>
+            <% } else { %>
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4 text-center">
+                    <i class="bi bi-geo-alt text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">No Default Address</h5>
+                    <p class="text-muted">Add a shipping address to make checkout faster</p>
+                    <a href="/addresses" class="btn btn-dark">
+                        <i class="bi bi-plus-circle me-2"></i>Add Address
+                    </a>
+                </div>
+            </div>
+            <% } %>
 
-                        <div class="mb-3">
-                            <label class="form-label">New Password</label>
-                            <input type="password" class="form-control" 
-                                   name="newPassword" required>
+            <!-- Security Card -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-4">Security</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Password</h6>
+                            <p class="text-muted small mb-0">Last changed <%= new Date(user.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }) %></p>
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Confirm New Password</label>
-                            <input type="password" class="form-control" 
-                                   name="confirmPassword" required>
-                        </div>
-
-                        <button type="submit" class="btn btn-dark px-4">
-                            <i class="bi bi-key me-2"></i>Update Password
+                        <button type="button" class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                            <i class="bi bi-key me-2"></i>Change Password
                         </button>
-                    </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Danger Zone Card -->
+            <div class="card shadow-sm border-danger mb-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title text-danger mb-3">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Danger Zone
+                    </h5>
+                    <p class="text-muted mb-3">Once you deactivate your account, you will lose access to all your data and orders. This action cannot be undone.</p>
+                    <button type="button" class="btn btn-outline-danger" onclick="confirmDeactivate()">
+                        <i class="bi bi-x-circle me-2"></i>Deactivate Account
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="changePasswordForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="currentPassword" class="form-label">Current Password</label>
+                        <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">New Password</label>
+                        <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+                        <div class="form-text">
+                            Password must contain:
+                            <ul class="small mb-0 mt-1">
+                                <li id="length-check">At least 8 characters</li>
+                                <li id="uppercase-check">One uppercase letter</li>
+                                <li id="lowercase-check">One lowercase letter</li>
+                                <li id="number-check">One number</li>
+                                <li id="special-check">One special character</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+                        <div id="password-match-message" class="form-text"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-dark" id="changePasswordBtn">Change Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Image Crop Modal -->
+<div class="modal fade" id="cropImageModal" tabindex="-1" aria-labelledby="cropImageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cropImageModalLabel">Crop Profile Picture</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="img-container">
+                    <img id="imageToCrop" style="max-width: 100%;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-dark" id="cropAndUploadBtn">Crop & Upload</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cropper.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<script>
+// Password validation
+const newPasswordInput = document.getElementById('newPassword');
+const confirmPasswordInput = document.getElementById('confirmPassword');
+const passwordMatchMessage = document.getElementById('password-match-message');
+
+newPasswordInput.addEventListener('input', function() {
+    const password = this.value;
+    
+    // Length check
+    const lengthCheck = document.getElementById('length-check');
+    if (password.length >= 8) {
+        lengthCheck.style.color = 'green';
+        lengthCheck.innerHTML = '✓ At least 8 characters';
+    } else {
+        lengthCheck.style.color = '';
+        lengthCheck.innerHTML = 'At least 8 characters';
+    }
+    
+    // Uppercase check
+    const uppercaseCheck = document.getElementById('uppercase-check');
+    if (/[A-Z]/.test(password)) {
+        uppercaseCheck.style.color = 'green';
+        uppercaseCheck.innerHTML = '✓ One uppercase letter';
+    } else {
+        uppercaseCheck.style.color = '';
+        uppercaseCheck.innerHTML = 'One uppercase letter';
+    }
+    
+    // Lowercase check
+    const lowercaseCheck = document.getElementById('lowercase-check');
+    if (/[a-z]/.test(password)) {
+        lowercaseCheck.style.color = 'green';
+        lowercaseCheck.innerHTML = '✓ One lowercase letter';
+    } else {
+        lowercaseCheck.style.color = '';
+        lowercaseCheck.innerHTML = 'One lowercase letter';
+    }
+    
+    // Number check
+    const numberCheck = document.getElementById('number-check');
+    if (/[0-9]/.test(password)) {
+        numberCheck.style.color = 'green';
+        numberCheck.innerHTML = '✓ One number';
+    } else {
+        numberCheck.style.color = '';
+        numberCheck.innerHTML = 'One number';
+    }
+    
+    // Special character check
+    const specialCheck = document.getElementById('special-check');
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+        specialCheck.style.color = 'green';
+        specialCheck.innerHTML = '✓ One special character';
+    } else {
+        specialCheck.style.color = '';
+        specialCheck.innerHTML = 'One special character';
+    }
+    
+    checkPasswordMatch();
+});
+
+confirmPasswordInput.addEventListener('input', checkPasswordMatch);
+
+function checkPasswordMatch() {
+    const newPassword = newPasswordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
+    
+    if (confirmPassword === '') {
+        passwordMatchMessage.textContent = '';
+        passwordMatchMessage.style.color = '';
+    } else if (newPassword === confirmPassword) {
+        passwordMatchMessage.textContent = '✓ Passwords match';
+        passwordMatchMessage.style.color = 'green';
+    } else {
+        passwordMatchMessage.textContent = '✗ Passwords do not match';
+        passwordMatchMessage.style.color = 'red';
+    }
+}
+
+// Change password form submission
+document.getElementById('changePasswordForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Passwords do not match'
+        });
+        return;
+    }
+    
+    // Validate password strength
+    if (newPassword.length < 8 || 
+        !/[A-Z]/.test(newPassword) || 
+        !/[a-z]/.test(newPassword) || 
+        !/[0-9]/.test(newPassword) || 
+        !/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Weak Password',
+            text: 'Please meet all password requirements'
+        });
+        return;
+    }
+    
+    try {
+        const response = await fetch('/profile/change-password', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: data.message
+            }).then(() => {
+                document.getElementById('changePasswordForm').reset();
+                bootstrap.Modal.getInstance(document.getElementById('changePasswordModal')).hide();
+                location.reload();
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message
+            });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Failed to change password'
+        });
+    }
+});
+
+// Profile image upload with cropper
+let cropper;
+const profileImageInput = document.getElementById('profileImageInput');
+const imageToCrop = document.getElementById('imageToCrop');
+const cropImageModal = new bootstrap.Modal(document.getElementById('cropImageModal'));
+
+profileImageInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    
+    if (!file) return;
+    
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        Swal.fire({
+            icon: 'error',
+            title: 'File Too Large',
+            text: 'Please select an image smaller than 5MB'
+        });
+        return;
+    }
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid File',
+            text: 'Please select an image file'
+        });
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        imageToCrop.src = event.target.result;
+        cropImageModal.show();
+        
+        // Initialize cropper
+        if (cropper) {
+            cropper.destroy();
+        }
+        cropper = new Cropper(imageToCrop, {
+            aspectRatio: 1,
+            viewMode: 2,
+            preview: '.preview',
+            responsive: true,
+            autoCropArea: 1,
+            minCropBoxWidth: 200,
+            minCropBoxHeight: 200
+        });
+    };
+    reader.readAsDataURL(file);
+});
+
+// Crop and upload
+document.getElementById('cropAndUploadBtn').addEventListener('click', async function() {
+    if (!cropper) return;
+    
+    const canvas = cropper.getCroppedCanvas({
+        width: 400,
+        height: 400
+    });
+    
+    canvas.toBlob(async function(blob) {
+        const formData = new FormData();
+        formData.append('profileImage', blob, 'profile.jpg');
+        
+        try {
+            const response = await fetch('/profile/update-image', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Profile picture updated successfully'
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'Failed to update profile picture'
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to upload image'
+            });
+        }
+        
+        cropImageModal.hide();
+    });
+});
+
+// Deactivate account
+function confirmDeactivate() {
+    Swal.fire({
+        title: 'Deactivate Account?',
+        text: 'This will permanently deactivate your account. You will lose access to all your data and orders. This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, deactivate my account',
+        cancelButtonText: 'Cancel'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch('/profile/deactivate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Account Deactivated',
+                        text: 'Your account has been deactivated successfully'
+                    }).then(() => {
+                        window.location.href = '/signin';
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Failed to deactivate account'
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to deactivate account'
+                });
+            }
+        }
+    });
+}
+</script>
 
 <%- include('../partials/footer') %>

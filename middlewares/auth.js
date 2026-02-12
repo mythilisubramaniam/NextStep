@@ -19,6 +19,11 @@ const isUserAuthenticated = async (req, res, next) => {
             return res.redirect('/user/login?error=blocked');
         }
 
+        if (!user.isActive) {
+            req.session.destroy();
+            return res.redirect('/user/login?error=deactivated');
+        }
+
         if (!user.isVerified) {
             return res.redirect('/user/verifyOtp?email=' + user.email + '&flow=login');
         }

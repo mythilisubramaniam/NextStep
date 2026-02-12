@@ -67,4 +67,12 @@ router.get("/profile/edit", userController.loadEditProfile);
 router.post("/profile/edit", userController.editProfile);
 router.post("/profile/change-password", userController.changePassword);
 
+// Profile image upload
+const multer = require('multer');
+const upload = multer({ dest: 'public/uploads/temp/' });
+router.post("/profile/update-image", upload.single('profileImage'), userController.updateProfileImage);
+
+// Deactivate account
+router.post("/profile/deactivate", userController.deactivateAccount);
+
 module.exports = router;

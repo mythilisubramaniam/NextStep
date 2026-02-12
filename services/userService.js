@@ -216,6 +216,13 @@ const login = async (req, res) => {
             });
         }
 
+        if (!user.isActive) {
+            return res.render("user/signin", {
+                title: "Sign In - Next Step",
+                error: "Your account has been deactivated. Please contact support to reactivate."
+            });
+        }
+
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.render("user/signin", {
@@ -557,7 +564,7 @@ const logout = (req, res) => {
             console.error('Logout error:', err);
         }
         res.clearCookie('connect.sid');
-        return res.redirect("/user/login");
+        return res.redirect("/signin");
     });
 };
 

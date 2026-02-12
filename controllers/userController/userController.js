@@ -71,9 +71,17 @@ exports.loadProfile = async (req, res) => {
             return res.redirect("/signin");
         }
 
+        // Get default address
+        const defaultAddress = await Address.findOne({ 
+            user: req.session.userId, 
+            isDefault: true 
+        });
+
         res.render("user/profile", { 
             user, 
-            title: "My Profile - Next Step" 
+            defaultAddress,
+            title: "My Profile - Next Step",
+            activePage: "profile"
         });
     } catch (error) {
         console.error("Profile error:", error);
@@ -94,7 +102,8 @@ exports.loadEditProfile = async (req, res) => {
 
         res.render("user/editProfile", { 
             user, 
-            title: "Edit Profile - Next Step" 
+            title: "Edit Profile - Next Step",
+            activePage: "profile"
         });
     } catch (error) {
         console.error("Edit profile error:", error);
@@ -124,23 +133,34 @@ exports.changePassword = async (req, res) => {
         const { currentPassword, newPassword, confirmPassword } = req.body;
 
         if (newPassword !== confirmPassword) {
-            return res.send("Passwords do not match");
+            return res.json({ success: false, message: "Passwords do not match" });
         }
 
         const user = await User.findById(req.session.userId);
-        const isMatch = await user.comparePassword(currentPassword);
-
-        if (!isMatch) {
-            return res.send("Current password is incorrect");
+        if (!user) {
+            return res.json({ success: false, message: "User not found" });
         }
 
-        user.password = newPassword;
+        const bcrypt = require("bcrypt");
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+        if (!isMatch) {
+            return res.json({ success: false, message: "Current password is incorrect" });
+        }
+
+        // Check if new password is same as current
+        const isSame = await bcrypt.compare(newPassword, user.password);
+        if (isSame) {
+            return res.json({ success: false, message: "New password must be different from current password" });
+        }
+
+        user.password = await bcrypt.hash(newPassword, 10);
         await user.save();
 
-        res.redirect("/profile");
+        res.json({ success: true, message: "Password changed successfully" });
     } catch (error) {
         console.error("Change password error:", error);
-        res.send("Failed to change password");
+        res.json({ success: false, message: "Failed to change password" });
     }
 };
 
@@ -157,7 +177,8 @@ exports.loadAddresses = async (req, res) => {
         res.render("user/addresses", { 
             addresses,
             user,
-            title: "My Addresses - Next Step" 
+            title: "My Addresses - Next Step",
+            activePage: "addresses"
         });
     } catch (error) {
         console.error("Load addresses error:", error);
@@ -284,5 +305,83 @@ exports.deleteAddress = async (req, res) => {
     } catch (error) {
         console.error("Delete address error:", error);
         res.json({ success: false, message: "Failed to delete address" });
+    }
+};
+
+// Update profile image
+exports.updateProfileImage = async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.json({ success: false, message: "Please login first" });
+        }
+
+        if (!req.file) {
+            return res.json({ success: false, message: "No image file provided" });
+        }
+
+        // Generate unique filename
+        const filename = `profile-${req.session.userId}-${Date.now()}.jpg`;
+        const imagePath = `/uploads/profiles/${filename}`;
+        const fs = require('fs');
+        const path = require('path');
+
+        // Ensure upload directory exists
+        const uploadDir = path.join(__dirname, '../../public/uploads/profiles');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+
+        // Move file to permanent location
+        const tempPath = req.file.path;
+        const targetPath = path.join(uploadDir, filename);
+        fs.renameSync(tempPath, targetPath);
+
+        // Update user profile image
+        const user = await User.findById(req.session.userId);
+        
+        // Delete old profile image if exists and not default
+        if (user.profileImage && user.profileImage !== '/images/default-profile.png') {
+            const oldImagePath = path.join(__dirname, '../../public', user.profileImage);
+            if (fs.existsSync(oldImagePath)) {
+                fs.unlinkSync(oldImagePath);
+            }
+        }
+
+        user.profileImage = imagePath;
+        await user.save();
+
+        res.json({ success: true, message: "Profile picture updated successfully", imageUrl: imagePath });
+    } catch (error) {
+        console.error("Update profile image error:", error);
+        res.json({ success: false, message: "Failed to update profile picture" });
+    }
+};
+
+// Deactivate account
+exports.deactivateAccount = async (req, res) => {
+    try {
+        if (!req.session.userId) {
+            return res.json({ success: false, message: "Please login first" });
+        }
+
+        const user = await User.findById(req.session.userId);
+        if (!user) {
+            return res.json({ success: false, message: "User not found" });
+        }
+
+        user.isActive = false;
+        await user.save();
+
+        // Destroy session
+        req.session.destroy((err) => {
+            if (err) {
+                console.error("Session destroy error:", err);
+            }
+        });
+
+        res.json({ success: true, message: "Account deactivated successfully" });
+    } catch (error) {
+        console.error("Deactivate account error:", error);
+        res.json({ success: false, message: "Failed to deactivate account" });
     }
 };
